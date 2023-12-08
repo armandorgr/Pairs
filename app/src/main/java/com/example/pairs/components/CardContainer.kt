@@ -57,10 +57,6 @@ fun CardsContainer(
                     }
                 }
             }
-            if(item.hayQueVoltear){
-                cardFaceState = CardFace.Back
-                item.hayQueVoltear=false
-            }
         }
     }
 
