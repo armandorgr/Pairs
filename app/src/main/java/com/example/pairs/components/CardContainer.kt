@@ -13,9 +13,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pairs.R
+import com.example.pairs.viewmodel.SelectedCard
 import com.example.pairs.viewmodel.ViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -26,10 +31,9 @@ fun CardsContainer(
     modifier: Modifier = Modifier
 ) {
     val cardsListState by viewModel.cardsListState.collectAsStateWithLifecycle()
-    val id2 by viewModel.idCard2.collectAsStateWithLifecycle()
     LazyVerticalGrid(
         contentPadding = PaddingValues(1.dp),
-        columns = GridCells.Adaptive(minSize = 70.dp),
+        columns = GridCells.Fixed(4),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.SpaceAround,
         modifier = Modifier
@@ -37,15 +41,15 @@ fun CardsContainer(
             .then(modifier)
     ) {
         items(cardsListState) { item ->
-            Log.d("PRUEBA", "Hay que voltear ${item.hayQueVoltear} nombre: ${item.text}")
-            var cardFaceState by rememberSaveable { mutableStateOf(CardFace.Back) }
+            val cardFaceState = rememberSaveable { mutableStateOf(CardFace.Back) }
+            val id2 by viewModel.idCard2.collectAsStateWithLifecycle()
             FlipCard(
-                cardFace =  if (item.hayQueVoltear) CardFace.Back else cardFaceState,
+                cardFace =  cardFaceState.value,
                 onClick = {
-                    if(!viewModel.areBothSet()){
-                        cardFaceState = it.next
-                        viewModel.setCard(cardsListState,item.id)
-                    }
+                          if (!viewModel.areBothSet() && !item.found){
+                              cardFaceState.value = it.next
+                              viewModel.setCard(SelectedCard(item.id, cardFaceState))
+                          }
                 },
                 front = { ContentCard(cardImage = item.image, text = item.text) },
                 back = { BackCard(backImage = R.drawable.card_back_option2) })
@@ -53,13 +57,12 @@ fun CardsContainer(
                 launch {
                     if(viewModel.areBothSet()){
                         delay(1000)
-                        viewModel.checkContent(cardsListState)
+                        viewModel.checkContent()
                     }
                 }
             }
         }
     }
-
 }
 
 /*

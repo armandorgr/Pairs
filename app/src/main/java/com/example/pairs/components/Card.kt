@@ -1,4 +1,5 @@
 package com.example.pairs.components
+
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -166,7 +167,6 @@ fun ContentCardPreview() {
 data class CardData(
     @StringRes val text: Int,
     @DrawableRes val image: Int,
-    val id:Int,
-    var hayQueVoltear:Boolean
-
+    val id: Int,
+    var found: Boolean = false
 )
