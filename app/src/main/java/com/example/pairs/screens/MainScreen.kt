@@ -3,6 +3,10 @@ package com.example.pairs.screens
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -10,6 +14,7 @@ import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOut
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +37,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -45,26 +53,38 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.pairs.R
 import com.example.pairs.components.CardsContainer
+import com.example.pairs.components.FinalCard
 import com.example.pairs.components.PlayersCard
 import com.example.pairs.components.PlayersPointsRow
 import com.example.pairs.components.VolumeButton
+import com.example.pairs.dataclasses.Ganador
 import com.example.pairs.ui.theme.PairsTheme
 import com.example.pairs.ui.theme.gwentFontFamily
 import com.example.pairs.viewmodel.ViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.system.exitProcess
 
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun MainScreen(
-    viewModel: ViewModel,
-) {
+    picj1: Int,
+    picj2: Int,
+    viewModel: ViewModel) {
+    val juegoState by viewModel.juegoTerminado.collectAsStateWithLifecycle()
     val turnoActual by viewModel.turno.collectAsStateWithLifecycle()
+    val puntos1 by viewModel.puntosJugador1.collectAsStateWithLifecycle()
+    val puntos2 by viewModel.puntosJugador2.collectAsStateWithLifecycle()
     var textVisible by rememberSaveable { mutableStateOf(false) }
+    val alpha:Float = 0.7f
     val playersModifier: Modifier = Modifier.size(height = 80.dp, width = 160.dp)
     PairsTheme {
-        Box(Modifier.fillMaxSize()) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+        ) {
             Image(
                 painterResource(id = R.drawable.background_1),
                 contentDescription = null,
@@ -78,16 +98,16 @@ fun MainScreen(
                 PlayersPointsRow(
                     player1 = {
                         PlayersCard(
-                            image = R.drawable.geralt_profile,
-                            text = stringResource(id = R.string.jugador, 1, 0),
+                            image = picj1,
+                            text = stringResource(id = R.string.jugador, 1, puntos1),
                             isReversed = true,
                             playersModifier.weight(0.35f)
                         )
                     },
                     player2 = {
                         PlayersCard(
-                            image = R.drawable.ciri_profile,
-                            text = stringResource(id = R.string.jugador, 2, 0),
+                            image = picj2,
+                            text = stringResource(id = R.string.jugador, 2, puntos2),
                             isReversed = false,
                             playersModifier.weight(0.35f)
                         )
@@ -112,10 +132,10 @@ fun MainScreen(
                         .fillMaxWidth()
                         .weight(0.1f)
                 ) {
-                    LaunchedEffect(key1 = Unit){
+                    LaunchedEffect(key1 = Unit) {
                         launch {
                             delay(100)
-                            textVisible=true
+                            textVisible = true
                         }
                     }
                     AnimatedVisibility(
@@ -124,7 +144,8 @@ fun MainScreen(
                     ) {
                         AnimatedContent(
                             targetState = turnoActual,
-                            label = "") {targetTurno ->
+                            label = ""
+                        ) { targetTurno ->
                             Text(
                                 stringResource(id = targetTurno.mensaje, targetTurno.jugador),
                                 fontSize = 28.sp,
@@ -144,17 +165,44 @@ fun MainScreen(
 
                 }
             }
+            AnimatedVisibility(
+                visible = juegoState,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = alpha))
+                )
+            }
+            AnimatedVisibility(visible = juegoState) {
+                val pic = if (puntos1 > puntos2) picj1 else picj2
+                val puntos = if (puntos1 > puntos2) puntos1 else puntos2
+                val id = if (puntos1 > puntos2) 1 else 2
+                FinalCard(
+                    ganador = Ganador(pic, puntos, id),
+                    onSalir = { exitProcess(0) },
+                    onVolverJugar = {
+                        viewModel.reset()
+                    })
+            }
 
         }
     }
 
 }
 
-
+/*
 @Preview(showSystemUi = true)
 @Composable
 fun MainScreenPreview(viewModel: ViewModel = ViewModel()) {
     PairsTheme {
-        MainScreen(viewModel = viewModel)
+        MainScreen(
+            viewModel = viewModel,
+            picj1 = R.drawable.geralt_profile,
+            picj2 = R.drawable.ciri_profile
+        )
     }
 }
+*/

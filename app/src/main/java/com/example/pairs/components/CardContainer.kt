@@ -31,6 +31,8 @@ fun CardsContainer(
     modifier: Modifier = Modifier
 ) {
     val cardsListState by viewModel.cardsListState.collectAsStateWithLifecycle()
+    val juegoTerminado by viewModel.juegoTerminado.collectAsStateWithLifecycle()
+    val id2 by viewModel.idCard2.collectAsStateWithLifecycle()
     LazyVerticalGrid(
         contentPadding = PaddingValues(1.dp),
         columns = GridCells.Fixed(4),
@@ -42,7 +44,7 @@ fun CardsContainer(
     ) {
         items(cardsListState) { item ->
             val cardFaceState = rememberSaveable { mutableStateOf(CardFace.Back) }
-            val id2 by viewModel.idCard2.collectAsStateWithLifecycle()
+            if(juegoTerminado) cardFaceState.value = CardFace.Back
             FlipCard(
                 cardFace =  cardFaceState.value,
                 onClick = {
@@ -53,13 +55,13 @@ fun CardsContainer(
                 },
                 front = { ContentCard(cardImage = item.image, text = item.text) },
                 back = { BackCard(backImage = R.drawable.card_back_option2) })
-            LaunchedEffect(key1 = id2){
-                launch {
-                    if(viewModel.areBothSet()){
-                        delay(1000)
-                        viewModel.checkContent()
-                    }
-                }
+        }
+    }
+    LaunchedEffect(key1 = id2){
+        launch {
+            if(viewModel.areBothSet()){
+                delay(500)
+                viewModel.checkContent()
             }
         }
     }

@@ -39,6 +39,10 @@ class ViewModel : ViewModel() {
         count++
         CardData(it.second, it.first, count)
     }
+    private var cartasEncontradas = 0
+
+    private val _juegoTerminado = MutableStateFlow(false)
+    var juegoTerminado:StateFlow<Boolean> = _juegoTerminado.asStateFlow()
 
     private val _puntosJugador1 = MutableStateFlow(0)
     var puntosJugador1:StateFlow<Int> = _puntosJugador1.asStateFlow()
@@ -58,6 +62,20 @@ class ViewModel : ViewModel() {
     private var _turno = MutableStateFlow(Turno.Jugador1)
     val turno: StateFlow<Turno> = _turno.asStateFlow()
 
+    fun reset(){
+        _juegoTerminado.value = false
+        _puntosJugador1.value = 0
+        _puntosJugador2.value = 0
+        cartasEncontradas = 0
+        _turno.value = Turno.Jugador1
+        _idCard1.value = SelectedCard()
+        _idCard2.value = SelectedCard()
+        _cardsListState.value.forEach { card ->
+            card.found = false
+        }
+        _cardsListState.value.shuffle()
+    }
+
     fun areBothSet(): Boolean {
         return _idCard1.value.id != 0 && _idCard2.value.id != 0
     }
@@ -66,17 +84,26 @@ class ViewModel : ViewModel() {
         _turno.value = _turno.value.next
     }
 
+    private fun sumarPunto(turno:Turno){
+        when(turno){
+            Turno.Jugador1 -> _puntosJugador1.value = _puntosJugador1.value+1
+            Turno.Jugador2 -> _puntosJugador2.value = _puntosJugador2.value+1
+        }
+    }
+
     fun checkContent() {
         val card1 = _cardsListState.value.firstOrNull() { data -> data.id == idCard1.value.id }
         val card2 = _cardsListState.value.firstOrNull() { data -> data.id == idCard2.value.id }
-        if (card1?.text != card2?.text) {
-            _idCard1.value.cardState.value = CardFace.Back
-            _idCard2.value.cardState.value = CardFace.Back
-            Log.d("PRUEBA", "${card1?.id}-${card2?.id}")
-            cambiarTurno()
-        } else {
+        if (card1?.text == card2?.text) {
+            sumarPunto(turno.value)
             card1?.found = true
             card2?.found = true
+            cartasEncontradas++
+            if(cartasEncontradas==(_cardsListState.value.size/2)) _juegoTerminado.value = true
+        } else {
+            _idCard1.value.cardState.value = CardFace.Back
+            _idCard2.value.cardState.value = CardFace.Back
+            cambiarTurno()
         }
         _idCard1.value.id = 0
         _idCard2.value.id = 0

@@ -10,4 +10,8 @@
     <string name="dandelion">Dandelion</string>
     <string name="jugador">Jugador %s: %s</string>
     <string name="turno">Turno de jugador %s</string>
+    <string name="final_message">Puntos %s</string>
+    <string name="salir">Salir</string>
+    <string name="ganador">Ganador Jugador %s</string>
+    <string name="volver_a_jugar">Volver a jugar</string>
 </resources>
