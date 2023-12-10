@@ -1,5 +1,7 @@
 package com.example.pairs.screens
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -22,14 +24,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +48,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -76,14 +82,15 @@ fun MainScreen(
     val turnoActual by viewModel.turno.collectAsStateWithLifecycle()
     val puntos1 by viewModel.puntosJugador1.collectAsStateWithLifecycle()
     val puntos2 by viewModel.puntosJugador2.collectAsStateWithLifecycle()
+    val isMuted by viewModel.isMuted.collectAsStateWithLifecycle()
+
     var textVisible by rememberSaveable { mutableStateOf(false) }
-    val alpha:Float = 0.7f
+    val alpha = 0.7f
     val playersModifier: Modifier = Modifier.size(height = 80.dp, width = 160.dp)
     PairsTheme {
         Box(
             Modifier
                 .fillMaxSize()
-                .systemBarsPadding()
         ) {
             Image(
                 painterResource(id = R.drawable.background_1),
@@ -92,9 +99,11 @@ fun MainScreen(
                 modifier = Modifier.fillMaxSize()
             )
             Column(
-                Modifier.fillMaxSize()
+                Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
             ) {
-                Spacer(modifier = Modifier.height(30.dp))
                 PlayersPointsRow(
                     player1 = {
                         PlayersCard(
@@ -114,7 +123,8 @@ fun MainScreen(
                     },
                     button = {
                         VolumeButton(
-                            onClick = { },
+                            isMuted,
+                            onClick = { viewModel.mute()},
                             modifier = Modifier.weight(0.1f)
                         )
                     },
@@ -193,7 +203,7 @@ fun MainScreen(
 
 }
 
-/*
+
 @Preview(showSystemUi = true)
 @Composable
 fun MainScreenPreview(viewModel: ViewModel = ViewModel()) {
@@ -205,4 +215,3 @@ fun MainScreenPreview(viewModel: ViewModel = ViewModel()) {
         )
     }
 }
-*/

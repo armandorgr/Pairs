@@ -52,10 +52,12 @@ fun PlayersCard(
 ) {
     val cornerShapeNormal = RoundedCornerShape(
         topStart = 10.dp,
-        bottomStart = 10.dp)
+        bottomStart = 10.dp
+    )
     val cornerShapeReversed = RoundedCornerShape(
         topEnd = 10.dp,
-        bottomEnd = 10.dp)
+        bottomEnd = 10.dp
+    )
     val corner = if (!isReversed) cornerShapeReversed else cornerShapeNormal
     Box(
         Modifier
@@ -122,9 +124,10 @@ fun PlayersCard(
 
 @Composable
 fun VolumeButton(
+    isMuted: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
-){
+) {
     ElevatedButton(
         shape = RoundedCornerShape(5.dp),
         onClick = onClick,
@@ -136,7 +139,7 @@ fun VolumeButton(
         modifier = modifier
     ) {
         Icon(
-            painterResource(id = R.drawable.speaker_icon),
+            painterResource(id = if (isMuted) R.drawable.mute else R.drawable.speaker_icon),
             contentDescription = null
         )
     }
@@ -148,14 +151,14 @@ fun PlayersPointsRow(
     player2: @Composable () -> Unit,
     button: @Composable () -> Unit,
     modifier: Modifier = Modifier
-){
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
             .fillMaxWidth()
             .then(modifier)
-    ){
+    ) {
         player1()
         button()
         player2()
@@ -167,14 +170,16 @@ fun PlayersPointsRow(
 fun PlayersCardPreview() {
     Column(Modifier.fillMaxSize()) {
         PlayersPointsRow(
-            player1 = { PlayersCard(
-                R.drawable.geralt_profile,
-                isReversed = false,
-                text = stringResource(id = R.string.jugador, 1, 0),
-                modifier = Modifier
-                    .size(height = 80.dp, width = 160.dp)
-                    .weight(0.35f, fill = false)
-            ) },
+            player1 = {
+                PlayersCard(
+                    R.drawable.geralt_profile,
+                    isReversed = false,
+                    text = stringResource(id = R.string.jugador, 1, 0),
+                    modifier = Modifier
+                        .size(height = 80.dp, width = 160.dp)
+                        .weight(0.35f, fill = false)
+                )
+            },
             player2 = {
                 PlayersCard(
                     R.drawable.ciri_profile,
@@ -185,8 +190,9 @@ fun PlayersCardPreview() {
                         .weight(0.35f, fill = false)
                 )
             },
-            button = { VolumeButton(onClick = {}, modifier = Modifier.weight(0.1f))},
-            modifier = Modifier.weight(0.5f, fill = false))
+            button = { VolumeButton(false, onClick = {}, modifier = Modifier.weight(0.1f)) },
+            modifier = Modifier.weight(0.5f, fill = false)
+        )
 
     }
 }
