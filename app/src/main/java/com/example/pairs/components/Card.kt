@@ -1,7 +1,7 @@
 package com.example.pairs.components
 
-import android.util.Log
 import androidx.annotation.DrawableRes
+import androidx.annotation.RawRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -113,7 +114,7 @@ fun BackCard(
             .then(modifier)
             .fillMaxSize()
     ) {
-        Column() {
+        Column{
             Image(
                 painterResource(id = backImage),
                 contentDescription = null,
@@ -133,11 +134,13 @@ fun FlipCard(
     onClick: (CardFace) -> Unit,
     front: @Composable () -> Unit,
     back: @Composable () -> Unit,
-    play:Boolean,
+    play: Boolean,
+    matched:Boolean,
     modifier: Modifier = Modifier
 ) {
+    @RawRes val animation:Int = if(matched) R.raw.good_animation else R.raw.bad_animation
     var isAnimationVisible by rememberSaveable { mutableStateOf(true) }
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.good_animation))
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(animation))
     var isPlaying by remember { mutableStateOf(play) }
     val progress by animateLottieCompositionAsState(
         composition = composition,
@@ -147,11 +150,11 @@ fun FlipCard(
         targetValue = cardFace.angle,
         animationSpec = tween(400, easing = FastOutSlowInEasing), label = ""
     )
-    LaunchedEffect(key1 = progress, key2 = play){
+    LaunchedEffect(key1 = progress, key2 = play) {
         isAnimationVisible = play
-        if(progress==1f){
+        if (progress == 1f) {
             isAnimationVisible = false
-        }else if(progress==0f){
+        } else if (progress == 0f) {
             isPlaying = false
             isAnimationVisible = false
         }
@@ -161,20 +164,22 @@ fun FlipCard(
         onClick = { onClick(cardFace) },
         border = BorderStroke(2.dp, Color.Black),
         modifier = Modifier
-            .size(width = 70.dp, height = 150.dp)
+            .height(132.dp)
             .graphicsLayer(rotationY = rotation.value)
             .then(modifier)
     ) {
         Box {
             if (rotation.value <= 90f) {
                 front()
-                if(isAnimationVisible){
+                if (isAnimationVisible) {
                     LottieAnimation(
-                        modifier = Modifier.size(50.dp),
+                        modifier = Modifier
+                            .size(30.dp)
+                            .align(Alignment.TopEnd),
                         composition = composition,
-                        progress = progress)
+                        progress = progress,
+                    )
                 }
-
             } else {
                 back()
             }
@@ -183,24 +188,7 @@ fun FlipCard(
     }
 }
 
-/*
-@Preview(showBackground = false, showSystemUi = true)
-@Composable
-fun ContentCardPreview() {
-    var cardFaceState by remember { mutableStateOf(CardFace.Front) }
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.height(200.dp)
-    ) {
-        FlipCard(
-            cardFace = cardFaceState,
-            onClick = {cardFace ->  cardFaceState = cardFace.next},
-            front = {ContentCard(R.drawable.ciri_card, R.string.ciri)},
-            back = { BackCard(R.drawable.card_back_option2)})
-    }
-}
-*/
+
 data class CardData(
     @StringRes val text: Int = R.string.eredin,
     @DrawableRes val image: Int = R.drawable.eredin_card,

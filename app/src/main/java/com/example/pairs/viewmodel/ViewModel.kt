@@ -2,21 +2,17 @@ package com.example.pairs.viewmodel
 
 import android.content.Context
 import android.media.MediaPlayer
-import android.provider.MediaStore.Audio.Media
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.pairs.R
 import com.example.pairs.Turno
 import com.example.pairs.components.CardData
-import com.example.pairs.components.CardFace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ViewModel : ViewModel() {
@@ -36,23 +32,27 @@ class ViewModel : ViewModel() {
         R.drawable.vesemir_card to R.string.vesemir,
         R.drawable.eredin_card to R.string.eredin,
         R.drawable.dandelion_card to R.string.dandelion,
+        R.drawable.triss_card to R.string.triss,
+        R.drawable.triss_card to R.string.triss,
+        R.drawable.emhyr_card to R.string.emhyr,
+        R.drawable.emhyr_card to R.string.emhyr
     ).map {
         count++
         CardData(it.second, it.first, count)
     }
     private var cartasEncontradas = 0
 
-    private var mMediaPlayer:MediaPlayer? = null
-    private var sMediaPlayer:MediaPlayer? = null
+    private var mMediaPlayer: MediaPlayer? = null
+    private var sMediaPlayer: MediaPlayer? = null
 
     private val _juegoTerminado = MutableStateFlow(false)
-    var juegoTerminado:StateFlow<Boolean> = _juegoTerminado.asStateFlow()
+    var juegoTerminado: StateFlow<Boolean> = _juegoTerminado.asStateFlow()
 
     private val _puntosJugador1 = MutableStateFlow(0)
-    var puntosJugador1:StateFlow<Int> = _puntosJugador1.asStateFlow()
+    var puntosJugador1: StateFlow<Int> = _puntosJugador1.asStateFlow()
 
     private val _puntosJugador2 = MutableStateFlow(0)
-    var puntosJugador2:StateFlow<Int> = _puntosJugador2.asStateFlow()
+    var puntosJugador2: StateFlow<Int> = _puntosJugador2.asStateFlow()
 
     private val _cardsListState = MutableStateFlow(cardsList)
     val cardsListState: StateFlow<List<CardData>> = _cardsListState.asStateFlow()
@@ -67,10 +67,10 @@ class ViewModel : ViewModel() {
     val turno: StateFlow<Turno> = _turno.asStateFlow()
 
     private var _isMueted = MutableStateFlow(false)
-    val isMuted:StateFlow<Boolean> = _isMueted.asStateFlow()
+    val isMuted: StateFlow<Boolean> = _isMueted.asStateFlow()
 
 
-    fun reset(){
+    fun reset() {
         _juegoTerminado.value = false
         _puntosJugador1.value = 0
         _puntosJugador2.value = 0
@@ -84,34 +84,39 @@ class ViewModel : ViewModel() {
         _cardsListState.value.shuffle()
     }
 
-    fun backgroundMusic(context: Context){
-        mMediaPlayer = MediaPlayer.create(context,R.raw.background_music)
-        mMediaPlayer?.setVolume(0.5f,0.5f)
+    fun esEmpate(): Boolean {
+        return _puntosJugador1.value == _puntosJugador2.value
+    }
+
+    fun backgroundMusic(context: Context) {
+        mMediaPlayer = MediaPlayer.create(context, R.raw.background_music)
+        mMediaPlayer?.setVolume(0.5f, 0.5f)
         mMediaPlayer?.start()
     }
 
-    fun stopMusic(){
+    fun stopMusic() {
         sMediaPlayer?.release()
         mMediaPlayer?.stop()
         mMediaPlayer?.release()
     }
 
-    fun mute(){
-        if(!_isMueted.value){
+    fun mute() {
+        if (!_isMueted.value) {
             mMediaPlayer?.pause()
             _isMueted.value = true
-        }else{
+        } else {
             Log.d("PRUEBA", "PLAYBACK")
             mMediaPlayer?.start()
             _isMueted.value = false
         }
 
     }
-    fun makeSound(context: Context, audio:Int){
-        if(!_isMueted.value){
-            sMediaPlayer =  MediaPlayer.create(context, audio)
-            sMediaPlayer?.setVolume(1f,1f)
-            sMediaPlayer?.setOnCompletionListener { media->
+
+    fun makeSound(context: Context, audio: Int) {
+        if (!_isMueted.value) {
+            sMediaPlayer = MediaPlayer.create(context, audio)
+            sMediaPlayer?.setVolume(1f, 1f)
+            sMediaPlayer?.setOnCompletionListener { media ->
                 media.release()
             }
             sMediaPlayer?.start()
@@ -127,11 +132,15 @@ class ViewModel : ViewModel() {
         _turno.value = _turno.value.next
     }
 
-    private fun sumarPunto(turno:Turno){
-        when(turno){
-            Turno.Jugador1 -> _puntosJugador1.value = _puntosJugador1.value+1
-            Turno.Jugador2 -> _puntosJugador2.value = _puntosJugador2.value+1
+    private fun sumarPunto(turno: Turno) {
+        when (turno) {
+            Turno.Jugador1 -> _puntosJugador1.value = _puntosJugador1.value + 1
+            Turno.Jugador2 -> _puntosJugador2.value = _puntosJugador2.value + 1
         }
+    }
+
+    fun isSelectedCard(card: CardData): Boolean {
+        return card.id == idCard1.value.id
     }
 
     suspend fun checkContent(context: Context) {
@@ -140,10 +149,16 @@ class ViewModel : ViewModel() {
             _idCard1.value.found = true
             _idCard2.value.found = true
             cartasEncontradas++
-            if(cartasEncontradas==(_cardsListState.value.size/2)){
-                _juegoTerminado.value = true
-                makeSound(context, R.raw.won_sound_effect)
-            }else{
+            if (cartasEncontradas == (_cardsListState.value.size / 2)) {
+                if (_puntosJugador1.value == _puntosJugador2.value) {
+                    _juegoTerminado.value = true
+                    delay(200)
+                    reset()
+                } else {
+                    _juegoTerminado.value = true
+                    makeSound(context, R.raw.won_sound_effect)
+                }
+            } else {
                 makeSound(context, R.raw.good_sound_effect)
                 withContext(Dispatchers.Main) {
                     val job1 = async {
@@ -179,7 +194,7 @@ class ViewModel : ViewModel() {
     fun setCard(card: CardData) {
         if (_idCard1.value.id == -1) {
             _idCard1.value = card
-        } else if (_idCard2.value.id == -1) {
+        } else if (_idCard2.value.id == -1 && card.id != _idCard1.value.id) {
             _idCard2.value = card
         }
 
